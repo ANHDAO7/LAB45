@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { useState } from "react";
 
@@ -71,29 +69,6 @@ export default function HomePage() {
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-orange-100 rounded-full blur-[120px] opacity-50 -z-10"></div>
       <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-sky-100 rounded-full blur-[100px] opacity-40 -z-10"></div>
 
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl border-b border-orange-100/50 shadow-sm">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-[#F36F21] rounded-xl flex items-center justify-center shadow-lg shadow-orange-200 group-hover:rotate-12 transition-transform">
-              <span className="text-white font-black text-xl">D</span>
-            </div>
-            <span className="text-2xl font-[900] tracking-tight text-[#101828]">
-              DADO<span className="text-[#F36F21]">.</span>shop
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-[#475467] font-semibold hover:bg-orange-50" asChild>
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button className="bg-[#F36F21] hover:bg-[#d95d16] text-white font-bold px-6 rounded-xl shadow-lg shadow-orange-100 transition-all hover:translate-y-[-2px]" asChild>
-              <Link href="/register">Join Us</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="container mx-auto px-6 py-16 relative">
         <div className="max-w-4xl mx-auto text-center mb-16">
@@ -128,6 +103,7 @@ export default function HomePage() {
           {filteredProducts.map((product) => (
             <div key={product.id} className="animate-in fade-in slide-in-from-bottom-8 duration-500 fill-mode-both" style={{ animationDelay: `${product.id * 100}ms` }}>
               <ProductCard
+                id={product.id}
                 name={product.name}
                 description={product.description}
                 price={product.price}
