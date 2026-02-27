@@ -14,12 +14,17 @@ export default function OrdersPage() {
     const router = useRouter();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        if (!authLoading && !user) {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted && !authLoading && !user) {
             router.push("/login?redirect=/orders");
         }
-    }, [user, authLoading, router]);
+    }, [user, authLoading, router, mounted]);
 
     useEffect(() => {
         if (user) {
@@ -39,13 +44,13 @@ export default function OrdersPage() {
             if (error) throw error;
             setOrders(data || []);
         } catch (error) {
-            console.error("Error fetching orders:", error);
+            // Error handled silently
         } finally {
             setLoading(false);
         }
     };
 
-    if (authLoading || (loading && orders.length === 0)) {
+    if (!mounted || authLoading || (loading && orders.length === 0)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#FDFCFB]">
                 <div className="flex flex-col items-center gap-4">

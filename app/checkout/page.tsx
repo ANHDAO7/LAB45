@@ -17,14 +17,19 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderStatus, setOrderStatus] = useState<"idle" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState("");
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        if (!authLoading && !user) {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted && !authLoading && !user) {
             router.push("/login?redirect=/checkout");
         }
-    }, [user, authLoading, router]);
+    }, [user, authLoading, router, mounted]);
 
-    if (authLoading) {
+    if (!mounted || authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#FDFCFB]">
                 <div className="w-12 h-12 border-4 border-[#F36F21] border-t-transparent rounded-full animate-spin"></div>
@@ -60,7 +65,6 @@ export default function CheckoutPage() {
             setOrderStatus("success");
             clearCart();
         } catch (error: any) {
-            console.error("Error placing order:", error.message);
             setErrorMessage(error.message);
             setOrderStatus("error");
         } finally {
