@@ -6,8 +6,19 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
 
+import { useState, useEffect } from "react";
+
 export default function CartPage() {
     const { cart, updateQuantity, removeFromCart, totalPrice, totalItems } = useCart();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <div className="min-h-screen bg-[#FDFCFB]" />;
+    }
 
     return (
         <div className="min-h-screen bg-[#FDFCFB] relative overflow-hidden">
@@ -101,8 +112,8 @@ export default function CartPage() {
                                     </div>
                                 </div>
 
-                                <Button className="w-full bg-[#F36F21] hover:bg-[#ff8c42] text-white py-8 rounded-2xl font-black text-lg shadow-lg shadow-orange-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                                    Checkout Now
+                                <Button className="w-full bg-[#F36F21] hover:bg-[#ff8c42] text-white py-8 rounded-2xl font-black text-lg shadow-lg shadow-orange-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]" asChild>
+                                    <Link href="/checkout">Checkout Now</Link>
                                 </Button>
 
                                 <p className="mt-6 text-center text-xs text-slate-500 font-medium">

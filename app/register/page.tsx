@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const registerSchema = z.object({
   fullname: z.string().min(1, "Full name is required"),
@@ -20,7 +21,8 @@ const registerSchema = z.object({
 type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "success" | "error" | "loading">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -30,15 +32,37 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: RegisterValues) => {
-    console.log("Register data:", data);
-    setStatus("success");
-    setTimeout(() => setStatus("idle"), 3000);
+  const onSubmit = async (data: RegisterValues) => {
+    setStatus("loading");
+    setErrorMessage("");
+
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.fullname,
+        },
+      },
+    });
+
+    if (error) {
+      let friendlyMessage = error.message;
+      if (error.message === "email rate limit exceeded") {
+        friendlyMessage = "Bạn đã yêu cầu đăng ký quá nhanh. Vui lòng đợi vài phút và thử lại.";
+      } else if (error.message === "User already registered") {
+        friendlyMessage = "Email này đã được đăng ký rồi. Bạn hãy dùng email khác hoặc Đăng nhập nhé.";
+      }
+      setErrorMessage(friendlyMessage);
+      setStatus("error");
+    } else {
+      setStatus("success");
+    }
   };
 
   const onError = () => {
     setStatus("error");
-    setTimeout(() => setStatus("idle"), 3000);
+    setErrorMessage("Please fix the errors in the form.");
   };
 
   return (
@@ -59,8 +83,15 @@ export default function RegisterPage() {
           <Alert variant="destructive" className="mb-6 animate-in fade-in slide-in-from-top-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>Please fix the errors in the form.</AlertDescription>
+            <AlertDescription>{errorMessage || "Please fix the errors in the form."}</AlertDescription>
           </Alert>
+        )}
+
+        {status === "loading" && (
+          <div className="mb-6 flex items-center justify-center space-x-2 text-[#F36F21]">
+            <div className="w-4 h-4 border-2 border-[#F36F21] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">Creating your account...</span>
+          </div>
         )}
 
         {status === "success" && (
@@ -110,9 +141,10 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 bg-[#F36F21] hover:bg-[#d95d16] text-white font-bold rounded-xl mt-4 shadow-xl shadow-orange-200 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px]"
+            disabled={status === "loading"}
+            className="w-full h-12 bg-[#F36F21] hover:bg-[#d95d16] text-white font-bold rounded-xl mt-4 shadow-xl shadow-orange-200 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Register
+            {status === "loading" ? "Registering..." : "Register"}
           </Button>
         </form>
 

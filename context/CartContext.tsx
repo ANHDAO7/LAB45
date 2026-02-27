@@ -23,25 +23,28 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-    const [cart, setCart] = useState<CartItem[]>(() => {
-        // Load cart from Local Storage on initialization
-        if (typeof window !== "undefined") {
-            const savedCart = localStorage.getItem("dado_cart");
-            if (savedCart) {
-                try {
-                    return JSON.parse(savedCart);
-                } catch (e) {
-                    console.error("Failed to parse cart from localStorage", e);
-                }
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Initial load from Local Storage
+    useEffect(() => {
+        const savedCart = localStorage.getItem("dado_cart");
+        if (savedCart) {
+            try {
+                setCart(JSON.parse(savedCart));
+            } catch (e) {
+                console.error("Failed to parse cart from localStorage", e);
             }
         }
-        return [];
-    });
+        setIsInitialized(true);
+    }, []);
 
-    // Save cart to Local Storage whenever it changes
+    // Save cart to Local Storage whenever it changes, but only after initialization
     useEffect(() => {
-        localStorage.setItem("dado_cart", JSON.stringify(cart));
-    }, [cart]);
+        if (isInitialized) {
+            localStorage.setItem("dado_cart", JSON.stringify(cart));
+        }
+    }, [cart, isInitialized]);
 
     const addToCart = (product: { id: number; name: string; price: string | number; image: string }, quantity: number) => {
         setCart((prevCart: CartItem[]) => {

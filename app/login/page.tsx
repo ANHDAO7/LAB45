@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 const loginSchema = z.object({
     email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -19,7 +21,11 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-    const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "success" | "error" | "loading">("idle");
+    const [errorMessage, setErrorMessage] = useState("");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get("redirect") || "/";
 
     const {
         register,
@@ -29,15 +35,32 @@ export default function LoginPage() {
         resolver: zodResolver(loginSchema),
     });
 
-    const onSubmit = (data: LoginValues) => {
-        console.log("Login data:", data);
-        setStatus("success");
-        setTimeout(() => setStatus("idle"), 3000);
+    const onSubmit = async (data: LoginValues) => {
+        setStatus("loading");
+        setErrorMessage("");
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+        });
+
+        if (error) {
+            const friendlyMessage = error.message === "Invalid login credentials"
+                ? "Email hoặc mật khẩu không chính xác."
+                : error.message;
+            setErrorMessage(friendlyMessage);
+            setStatus("error");
+        } else {
+            setStatus("success");
+            setTimeout(() => {
+                router.push(redirectTo);
+            }, 1000);
+        }
     };
 
     const onError = () => {
         setStatus("error");
-        setTimeout(() => setStatus("idle"), 3000);
+        setErrorMessage("Please fill in all required fields correctly.");
     };
 
     return (
@@ -58,8 +81,15 @@ export default function LoginPage() {
                     <Alert variant="destructive" className="mb-6 animate-in fade-in slide-in-from-top-4">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Error</AlertTitle>
-                        <AlertDescription>Please fill in all required fields correctly.</AlertDescription>
+                        <AlertDescription>{errorMessage || "Please fill in all required fields correctly."}</AlertDescription>
                     </Alert>
+                )}
+
+                {status === "loading" && (
+                    <div className="mb-6 flex items-center justify-center space-x-2 text-[#F36F21]">
+                        <div className="w-4 h-4 border-2 border-[#F36F21] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-medium">Logging in...</span>
+                    </div>
                 )}
 
                 {status === "success" && (
@@ -98,9 +128,10 @@ export default function LoginPage() {
 
                     <Button
                         type="submit"
-                        className="w-full h-12 bg-[#F36F21] hover:bg-[#d95d16] text-white font-bold rounded-xl mt-4 shadow-xl shadow-orange-200 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px]"
+                        disabled={status === "loading"}
+                        className="w-full h-12 bg-[#F36F21] hover:bg-[#d95d16] text-white font-bold rounded-xl mt-4 shadow-xl shadow-orange-200 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Login
+                        {status === "loading" ? "Logging in..." : "Login"}
                     </Button>
                 </form>
 
